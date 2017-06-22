@@ -106,13 +106,13 @@ class NfcReactNativeModule extends ReactContextBaseJavaModule implements Activit
                             tag.close();
                             return;
                         }
-                        
+
                         if (authResult) {
                             WritableMap dataSector = Arguments.createMap();
                             WritableArray blocksXSector = Arguments.createArray();
-                            
+
                             if (readOperation) {
-                                for (int j = 0; j < sectores.getMap(i).getArray("blocks").size(); j++) 
+                                for (int j = 0; j < sectores.getMap(i).getArray("blocks").size(); j++)
                                 {
                                     int iBloque = sectores.getMap(i).getArray("blocks").getInt(j);
                                     byte[] blockData = tag.readBlock(4 * sectores.getMap(i).getInt("sector") + iBloque);
@@ -124,7 +124,7 @@ class NfcReactNativeModule extends ReactContextBaseJavaModule implements Activit
 
                                 readDataSectors.pushMap(dataSector);
                             }
-                            
+
                             if (writeOperation) {
                                 for (int k = 0; k < sectores.getMap(i).getArray("blocks").size(); k++)
                                 {
@@ -283,6 +283,15 @@ class NfcReactNativeModule extends ReactContextBaseJavaModule implements Activit
         this.idOperation = true;
     }
 
+    @ReactMethod
+    public void reset() {
+        this.tagId = 0;
+        this.sectores = null;
+        this.readOperation = false;
+        this.writeOperation = false;
+        this.idOperation = false;
+    }
+
     private static byte[] hexStringToByteArray(String s) {
         int len = s.length();
         byte[] data = new byte[len / 2];
@@ -302,7 +311,7 @@ class NfcReactNativeModule extends ReactContextBaseJavaModule implements Activit
     }
 
     private static byte[] arrayIntsToArrayBytes(int[] listaInts) {
-        
+
         ByteBuffer bytebuffer = ByteBuffer.allocate(16);
         for (int i = 0; i < 16; i++) {
             byte high = (byte)((byte)listaInts[i*2] & 0xf0 >> 4);
@@ -313,7 +322,7 @@ class NfcReactNativeModule extends ReactContextBaseJavaModule implements Activit
     }
 
     private static int[] arrayBytesToArrayInts(byte[] listaBytes) {
-        
+
         IntBuffer arraybuffer = IntBuffer.allocate(32);
         for(byte b : listaBytes) {
             int high = (b & 0xf0) >> 4;
@@ -321,12 +330,12 @@ class NfcReactNativeModule extends ReactContextBaseJavaModule implements Activit
             arraybuffer.put(high);
             arraybuffer.put(low);
         }
-        
+
         return arraybuffer.array();
     }
 
     static String bin2hex(byte[] data) {
         return String.format("%0" + (data.length * 2) + "X", new BigInteger(1,data));
     }
-    
+
 }
