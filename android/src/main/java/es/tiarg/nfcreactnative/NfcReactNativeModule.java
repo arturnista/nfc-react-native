@@ -61,7 +61,7 @@ class NfcReactNativeModule extends ReactContextBaseJavaModule implements Activit
     private ScheduledExecutorService exec;
     private ScheduledFuture nfcFuture;
 
-    private class ThreadLectura implements Runnable {
+    private class ReadNFCThread implements Runnable {
         public void run() {
             if (tag != null && (idOperation || readOperation || writeOperation)) {
                 try {
@@ -271,7 +271,7 @@ class NfcReactNativeModule extends ReactContextBaseJavaModule implements Activit
         this.sectores = sectores;
         this.readOperation = true;
         cancelExecFuture();
-        this.nfcFuture = this.exec.scheduleAtFixedRate(new ThreadLectura(), 0, 1, TimeUnit.SECONDS);
+        this.nfcFuture = this.exec.scheduleAtFixedRate(new ReadNFCThread(), 0, 1, TimeUnit.SECONDS);
     }
 
     @ReactMethod
@@ -281,14 +281,14 @@ class NfcReactNativeModule extends ReactContextBaseJavaModule implements Activit
         this.sectores = sectores;
         this.writeOperation = true;
         cancelExecFuture();
-        this.nfcFuture = this.exec.scheduleAtFixedRate(new ThreadLectura(), 0, 1, TimeUnit.SECONDS);
+        this.nfcFuture = this.exec.scheduleAtFixedRate(new ReadNFCThread(), 0, 1, TimeUnit.SECONDS);
     }
 
     @ReactMethod
     public void getTagId() {
         this.idOperation = true;
         cancelExecFuture();
-        this.nfcFuture = this.exec.scheduleAtFixedRate(new ThreadLectura(), 0, 1, TimeUnit.SECONDS);
+        this.nfcFuture = this.exec.scheduleAtFixedRate(new ReadNFCThread(), 0, 1, TimeUnit.SECONDS);
     }
 
     @ReactMethod
