@@ -32,6 +32,7 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import static android.R.attr.action;
@@ -57,7 +58,8 @@ class NfcReactNativeModule extends ReactContextBaseJavaModule implements Activit
     private ReadableArray sectores;
     private NfcAdapter mNfcAdapter;
     private MifareClassic tag;
-
+    private ScheduledExecutorService exec;
+    private ScheduledFuture nfcFuture;
 
     private class ThreadLectura implements Runnable {
         public void run() {
@@ -199,8 +201,8 @@ class NfcReactNativeModule extends ReactContextBaseJavaModule implements Activit
         this.reactContext.addActivityEventListener(this);
         this.reactContext.addLifecycleEventListener(this);
 
-        ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor();
-        exec.scheduleAtFixedRate(new ThreadLectura(), 0, 1, TimeUnit.SECONDS);
+        this.exec = Executors.newSingleThreadScheduledExecutor();
+        this.nfcFuture = null;
 
         this.idOperation = false;
         this.readOperation = false;
@@ -268,6 +270,8 @@ class NfcReactNativeModule extends ReactContextBaseJavaModule implements Activit
     public void readTag(ReadableArray sectores) {
         this.sectores = sectores;
         this.readOperation = true;
+        cancelExecFuture();
+        this.nfcFuture = this.exec.scheduleAtFixedRate(new ThreadLectura(), 0, 1, TimeUnit.SECONDS);
     }
 
     @ReactMethod
@@ -276,11 +280,15 @@ class NfcReactNativeModule extends ReactContextBaseJavaModule implements Activit
         this.tagId = tagId;
         this.sectores = sectores;
         this.writeOperation = true;
+        cancelExecFuture();
+        this.nfcFuture = this.exec.scheduleAtFixedRate(new ThreadLectura(), 0, 1, TimeUnit.SECONDS);
     }
 
     @ReactMethod
     public void getTagId() {
         this.idOperation = true;
+        cancelExecFuture();
+        this.nfcFuture = this.exec.scheduleAtFixedRate(new ThreadLectura(), 0, 1, TimeUnit.SECONDS);
     }
 
     @ReactMethod
@@ -290,6 +298,14 @@ class NfcReactNativeModule extends ReactContextBaseJavaModule implements Activit
         this.readOperation = false;
         this.writeOperation = false;
         this.idOperation = false;
+        cancelExecFuture();
+    }
+
+    private void cancelExecFuture() {
+        if(this.nfcFuture == null) return;
+        if(this.nfcFuture.isDone()) return;
+        if(this.nfcFuture.isCancelled()) return;
+        this.nfcFuture.cancel(true);
     }
 
     private static byte[] hexStringToByteArray(String s) {
